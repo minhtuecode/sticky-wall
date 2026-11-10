@@ -48,6 +48,9 @@ button.btn.danger{background:#3a2226;color:var(--danger)}
 .ok{color:var(--ok)}.err{color:var(--danger)}
 #prevWrap{display:flex;justify-content:center;margin:10px 0}
 #prev{width:min(78vw,340px);height:auto;border-radius:34px;box-shadow:0 10px 40px rgba(0,0,0,.6);background:#000}
+.bar{margin:6px 16px 0;max-width:688px;background:#3a3320;color:var(--accent);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:14px}
+.bar[hidden]{display:none}
+@media(min-width:720px){.bar{margin:6px auto 0}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));background:#2b3350;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
 details summary{cursor:pointer;color:var(--accent);font-weight:600}
@@ -58,6 +61,10 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}
   <h1>📌 Sticky Wall</h1>
   <div class="sub" id="count">0 ghi chú</div>
 </header>
+<div class="bar" id="bar" hidden>
+  <span>Có thay đổi chưa đẩy lên GitHub</span>
+  <button class="btn" id="barPush" style="padding:7px 12px;font-size:13px;flex:0 0 auto">Đẩy lên ngay</button>
+</div>
 <main>
 
 <!-- DANH SÁCH -->
@@ -94,10 +101,14 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}
 <section class="tab" id="tab-prev">
   <div id="prevWrap"><canvas id="prev"></canvas></div>
   <div class="row">
-    <button class="btn" id="reroll">🎲 Đổi ngẫu nhiên</button>
+    <button class="btn" id="rerollNow">🔄 Đổi ảnh nền ngay</button>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn sec" id="reroll">🎲 Xem thử bộ khác</button>
     <button class="btn sec" id="savePng">Tải ảnh PNG</button>
   </div>
-  <p class="hint">Ảnh thật được tạo tự động mỗi sáng trên GitHub, bố cục tương tự bản xem trước này nhưng cách chọn ghi chú theo ngày.</p>
+  <p class="hint">Bản xem trước gần như khớp với ảnh nền thật của hôm nay. "Đổi ảnh nền ngay" gửi lệnh lên GitHub để tạo bộ ghi chú khác (mất khoảng 1–2 phút), sau đó bạn chạy Phím tắt Sticky Wallpaper để iPhone lấy ảnh mới. "Xem thử bộ khác" chỉ xem thử trong app, không đổi ảnh thật.</p>
+  <p class="hint"><a id="liveLink" href="wallpaper-today.png" target="_blank" style="color:var(--accent)">Mở ảnh nền thật trên GitHub</a></p>
 </section>
 
 <!-- CÀI ĐẶT -->
@@ -129,8 +140,13 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}
     <label for="gToken">Token</label><input type="password" id="gToken" autocomplete="off">
     <div class="row" style="margin-top:12px">
       <button class="btn" id="push">⬆ Đẩy lên GitHub</button>
-      <button class="btn sec" id="pull">⬇ Tải từ GitHub</button>
     </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sec" id="pull">⬇ Gộp từ GitHub</button>
+      <button class="btn sec" id="pullReplace">⬇ Thay bằng bản GitHub</button>
+    </div>
+    <label class="row fit" style="margin:12px 0 0;color:var(--text)"><input type="checkbox" id="autoSync"> Tự tải từ GitHub khi mở app</label>
+    <p class="hint">Gộp: chỉ thêm ghi chú mới, không xóa gì. Thay bằng bản GitHub: máy này giống hệt GitHub, kể cả các ghi chú đã bị xóa. Tự tải: khi máy không có thay đổi chưa đẩy, app tự cập nhật theo GitHub mỗi lần mở.</p>
     <p class="hint" id="syncMsg"></p>
   </div>
 
@@ -158,7 +174,10 @@ import { PALETTE, drawWallpaper, pickNotes, mulberry32, hashString, todayVN } fr
 const KEY = 'stickywall.v1', GKEY = 'stickywall.github';
 const $ = (s) => document.querySelector(s);
 const defaults = { version: 1, settings: { theme: 'dark', count: 3, width: 1206, height: 2622, tags: [] }, notes: [] };
+const SKEY = 'stickywall.sync';
+function loadSync() { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch (e) { return {}; } }
 let data = load();
+let sync = loadSync(); // { sha: bản notes.json lần đồng bộ gần nhất, dirty: có thay đổi chưa đẩy }
 let gh = JSON.parse(localStorage.getItem(GKEY) || '{}');
 let activeTag = null, rerollSeed = '', editingId = null;
 
@@ -169,7 +188,13 @@ function load() {
   } catch (e) {}
   return structuredClone(defaults);
 }
-function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function save() { localStorage.setItem(KEY, JSON.stringify(data)); sync.dirty = true; saveSync(); updateBar(); }
+function saveSync() { localStorage.setItem(SKEY, JSON.stringify(sync)); }
+function isDirty() { return !!sync.dirty || (!sync.sha && data.notes.length > 0); }
+function updateBar() {
+  const bar = $('#bar'); if (!bar) return;
+  bar.hidden = !(gh.owner && gh.repo && gh.token && isDirty());
+}
 function saveGh() { localStorage.setItem(GKEY, JSON.stringify(gh)); }
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -325,8 +350,9 @@ async function drawPreview() {
   try { await document.fonts.load('40px "Patrick Hand"', 'Đừng ủ ỉ ế ờ'); } catch (e) {}
   const s = data.settings, c = $('#prev');
   c.width = s.width; c.height = s.height;
+  $('#liveLink').href = 'wallpaper-today.png?t=' + Date.now();
   const date = todayVN();
-  const seedStr = date + '|' + data.notes.length + rerollSeed;
+  const seedStr = date + '|' + data.notes.length + (s.salt ? '|' + s.salt : '') + rerollSeed;
   const picks = pickNotes(data.notes, s.count, mulberry32(hashString(seedStr)), s.tags);
   drawWallpaper(c.getContext('2d'), s.width, s.height, picks, { theme: s.theme, fontFamily: FONT, seedStr });
 }
@@ -348,15 +374,16 @@ function renderSettings() {
     const t = c.dataset.t; s.tags = s.tags.includes(t) ? s.tags.filter((x) => x !== t) : [...s.tags, t];
     save(); renderSettings();
   }));
-  $('#gOwner').value = gh.owner || ''; $('#gRepo').value = gh.repo || ''; $('#gBranch').value = gh.branch || 'main'; $('#gToken').value = gh.token || '';
+  $('#gOwner').value = gh.owner || ''; $('#gRepo').value = gh.repo || ''; $('#gBranch').value = gh.branch || 'main'; $('#gToken').value = gh.token || ''; $('#autoSync').checked = gh.auto !== false;
 }
 $('#theme').addEventListener('change', (e) => { data.settings.theme = e.target.value; save(); });
 $('#cnt').addEventListener('change', (e) => { data.settings.count = +e.target.value; save(); });
 $('#res').addEventListener('change', (e) => { const [w, h] = e.target.value.split('x').map(Number); data.settings.width = w; data.settings.height = h; save(); });
 ['gOwner', 'gRepo', 'gBranch', 'gToken'].forEach((id) => $('#' + id).addEventListener('input', () => {
-  gh = { owner: $('#gOwner').value.trim(), repo: $('#gRepo').value.trim(), branch: $('#gBranch').value.trim() || 'main', token: $('#gToken').value.trim() };
-  saveGh();
+  gh = { ...gh, owner: $('#gOwner').value.trim(), repo: $('#gRepo').value.trim(), branch: $('#gBranch').value.trim() || 'main', token: $('#gToken').value.trim() };
+  saveGh(); updateBar();
 }));
+$('#autoSync').addEventListener('change', (e) => { gh.auto = e.target.checked; saveGh(); });
 
 function exportObj() { return { version: 1, settings: data.settings, notes: data.notes }; }
 $('#export').addEventListener('click', () => {
@@ -375,7 +402,7 @@ function ghReady() {
   if (!gh.owner || !gh.repo || !gh.token) { setMsg('Điền đủ tài khoản, repo và token.', true); return false; }
   return true;
 }
-function setMsg(t, bad) { const m = $('#syncMsg'); m.textContent = t; m.className = 'hint ' + (bad ? 'err' : 'ok'); }
+function setMsg(t, bad) { const m = $('#syncMsg'); m.textContent = t; m.className = 'hint ' + (bad ? 'err' : 'ok'); toast(t); }
 const api = (path, opt = {}) => fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${path}`, {
   ...opt, headers: { Authorization: 'Bearer ' + gh.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
 });
@@ -386,35 +413,121 @@ async function remoteGet() {
   const j = await r.json();
   return { sha: j.sha, json: JSON.parse(b64dec(j.content)) };
 }
-$('#push').addEventListener('click', async () => {
+function mergeIn(json) {
+  const seen = new Set(data.notes.map((n) => keyOf(n.text)));
+  let add = 0;
+  for (const n of json.notes || []) {
+    if (!n || !n.text || seen.has(keyOf(n.text))) continue;
+    if (!n.id) n.id = uid();
+    n.tags = n.tags || [];
+    data.notes.push(n); seen.add(keyOf(n.text)); add++;
+  }
+  return add;
+}
+// Thay toàn bộ dữ liệu trên máy bằng bản trên GitHub (kể cả việc xóa)
+function applyRemote(json, sha) {
+  data = { ...defaults, version: 1, settings: { ...defaults.settings, ...(json.settings || {}) }, notes: (Array.isArray(json.notes) ? json.notes : []).filter((n) => n && n.text) };
+  data.notes.forEach((n) => { if (!n.id) n.id = uid(); n.tags = n.tags || []; });
+  save();
+  sync = { sha, dirty: false }; saveSync(); updateBar();
+  activeTag = null; editingId = null;
+  renderList(); renderSettings();
+}
+const putErr = (r) => new Error('GitHub trả về ' + r.status + (r.status === 401 || r.status === 403 ? ' (kiểm tra quyền token)' : r.status === 409 || r.status === 422 ? ' (có thay đổi cùng lúc, hãy thử lại)' : ''));
+
+async function doPush() {
+  const { sha, json } = await remoteGet();
+  if (json && !sync.sha && (json.notes || []).length &&
+      !confirm(`GitHub đang có ${json.notes.length} ghi chú. Đẩy lúc này sẽ thay chúng bằng ${data.notes.length} ghi chú trên máy này. Tiếp tục?`)) return 'cancel';
+  let merged = 0;
+  // GitHub đã đổi kể từ lần đồng bộ trước (ví dụ nhập từ máy tính): gộp ghi chú mới của GitHub vào trước khi đẩy
+  if (json && sync.sha && sha !== sync.sha) { merged = mergeIn(json); if (merged) { save(); renderList(); } }
+  const body = { message: 'Cập nhật ghi chú ' + todayVN(), content: b64enc(JSON.stringify(exportObj(), null, 2) + '\n'), branch: gh.branch || 'main' };
+  if (sha) body.sha = sha;
+  const r = await api('notes.json', { method: 'PUT', body: JSON.stringify(body) });
+  if (!r.ok) throw putErr(r);
+  const j = await r.json();
+  sync = { sha: j.content && j.content.sha, dirty: false }; saveSync(); updateBar();
+  return merged;
+}
+async function pushNow() {
   if (!ghReady()) return;
   setMsg('Đang đẩy...');
   try {
-    const { sha } = await remoteGet();
-    const body = { message: 'Cập nhật ghi chú ' + todayVN(), content: b64enc(JSON.stringify(exportObj(), null, 2) + '\n'), branch: gh.branch || 'main' };
-    if (sha) body.sha = sha;
-    const r = await api('notes.json', { method: 'PUT', body: JSON.stringify(body) });
-    if (!r.ok) throw new Error('GitHub trả về ' + r.status + (r.status === 401 || r.status === 403 ? ' (kiểm tra quyền token)' : ''));
-    setMsg('Đã đẩy lên GitHub. Ảnh nền sẽ được tạo lại sau khoảng 1 phút.');
+    const res = await doPush();
+    if (res === 'cancel') return setMsg('Đã huỷ.');
+    setMsg((res ? `Đã gộp ${res} ghi chú mới từ GitHub rồi đẩy lên. ` : 'Đã đẩy lên GitHub. ') + 'Ảnh nền sẽ được tạo lại sau khoảng 1–2 phút.');
   } catch (e) { setMsg('Lỗi: ' + e.message, true); }
-});
+}
+$('#push').addEventListener('click', pushNow);
+$('#barPush').addEventListener('click', pushNow);
+
 $('#pull').addEventListener('click', async () => {
   if (!ghReady()) return;
   setMsg('Đang tải...');
   try {
-    const { json } = await remoteGet();
+    const { sha, json } = await remoteGet();
     if (!json) return setMsg('Repo chưa có notes.json.', true);
-    if (data.notes.length && !confirm('Gộp ghi chú từ GitHub vào máy này? (Ghi chú trùng sẽ được bỏ qua, cài đặt lấy từ GitHub)')) return setMsg('Đã huỷ.');
-    const seen = new Set(data.notes.map((n) => keyOf(n.text)));
-    let add = 0;
-    for (const n of json.notes || []) if (n.text && !seen.has(keyOf(n.text))) { data.notes.push(n); seen.add(keyOf(n.text)); add++; }
+    const add = mergeIn(json);
     if (json.settings) data.settings = { ...data.settings, ...json.settings };
-    save(); renderList(); renderSettings();
-    setMsg(`Đã tải, thêm ${add} ghi chú mới.`);
+    save(); sync.sha = sha; saveSync(); updateBar();
+    renderList(); renderSettings();
+    setMsg(`Đã gộp, thêm ${add} ghi chú mới. Bấm Đẩy lên GitHub nếu muốn lưu bản gộp lên GitHub.`);
+  } catch (e) { setMsg('Lỗi: ' + e.message, true); }
+});
+$('#pullReplace').addEventListener('click', async () => {
+  if (!ghReady()) return;
+  setMsg('Đang tải...');
+  try {
+    const { sha, json } = await remoteGet();
+    if (!json) return setMsg('Repo chưa có notes.json.', true);
+    const n = (json.notes || []).length;
+    if (isDirty() && !confirm(`Máy này có thay đổi chưa đẩy lên GitHub. Thay bằng bản GitHub (${n} ghi chú) sẽ làm mất các thay đổi đó. Tiếp tục?`)) return setMsg('Đã huỷ.');
+    applyRemote(json, sha);
+    setMsg(`Đã thay bằng bản trên GitHub (${n} ghi chú).`);
   } catch (e) { setMsg('Lỗi: ' + e.message, true); }
 });
 
+// Đổi ảnh nền ngay: chỉ ghi thêm một mã ngẫu nhiên (salt) vào cài đặt trên GitHub, không đụng tới ghi chú
+$('#rerollNow').addEventListener('click', async () => {
+  if (!ghReady()) return;
+  setMsg('Đang gửi lệnh đổi ảnh nền...');
+  try {
+    const { sha, json } = await remoteGet();
+    if (!json) return setMsg('Repo chưa có notes.json. Hãy đẩy ghi chú lên GitHub trước.', true);
+    const salt = Math.random().toString(36).slice(2, 8);
+    const out = { ...json, settings: { ...(json.settings || {}), salt } };
+    const wasDirty = isDirty();
+    const body = { message: 'Đổi ảnh nền ngay ' + todayVN(), content: b64enc(JSON.stringify(out, null, 2) + '\n'), branch: gh.branch || 'main', sha };
+    const r = await api('notes.json', { method: 'PUT', body: JSON.stringify(body) });
+    if (!r.ok) throw putErr(r);
+    const j = await r.json();
+    if (!wasDirty) applyRemote(out, j.content && j.content.sha);
+    else { data.settings.salt = salt; localStorage.setItem(KEY, JSON.stringify(data)); }
+    rerollSeed = '';
+    if ($('#tab-prev').classList.contains('on')) drawPreview();
+    setMsg('Đã gửi lệnh đổi ảnh nền. Sau 1–2 phút, chạy Phím tắt Sticky Wallpaper để iPhone lấy ảnh mới.');
+  } catch (e) { setMsg('Lỗi: ' + e.message, true); }
+});
+
+// Tự tải khi mở app / quay lại app, chỉ khi máy không có thay đổi chưa đẩy
+let lastAuto = 0;
+async function autoSync() {
+  if (gh.auto === false || !gh.owner || !gh.repo || !gh.token) return;
+  if (Date.now() - lastAuto < 20000) return;
+  lastAuto = Date.now();
+  try {
+    const { sha, json } = await remoteGet();
+    if (!json) return;
+    if (isDirty()) { updateBar(); return; }
+    if (sha !== sync.sha) { applyRemote(json, sha); toast(`Đã cập nhật từ GitHub (${data.notes.length} ghi chú)`); }
+  } catch (e) { /* mất mạng hoặc lỗi tạm thời: bỏ qua */ }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) autoSync(); });
+
 renderList();
+updateBar();
+autoSync();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
