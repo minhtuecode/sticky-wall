@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sticky">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Sticky Wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+:root{--bg:#14161c;--panel:#1d2230;--panel2:#252c3d;--text:#eef0f5;--muted:#9aa3b8;--accent:#ffd84d;--danger:#ff6b6b;--ok:#6fe3a0;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(78px + env(safe-area-inset-bottom))}
+header{padding:16px 16px 6px}
+h1{margin:0;font-size:22px}
+.sub{color:var(--muted);font-size:13px}
+main{padding:8px 16px 24px;max-width:720px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--panel);border-top:1px solid #2f3850;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 2px 8px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ic{font-size:20px}
+nav button.on{color:var(--accent)}
+.card{background:var(--panel);border-radius:var(--r);padding:14px;margin:10px 0}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+textarea,input[type=text],input[type=password],input[type=search],select,input[type=number]{width:100%;background:var(--panel2);border:1px solid #34405a;border-radius:10px;color:var(--text);padding:10px 12px;font:inherit}
+textarea{min-height:130px;resize:vertical}
+button.btn{background:var(--accent);color:#2a2400;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px}
+button.btn.sec{background:var(--panel2);color:var(--text);font-weight:600}
+button.btn.danger{background:#3a2226;color:var(--danger)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.row.fit>*{flex:0 0 auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{background:var(--panel2);color:var(--muted);border:1px solid #34405a;border-radius:999px;padding:4px 11px;font-size:13px}
+.chip.on{background:var(--accent);color:#2a2400;border-color:var(--accent);font-weight:700}
+.note{border-radius:10px;padding:12px 14px;margin:10px 0;color:#2d2a26;font-family:"Patrick Hand",cursive;font-size:20px;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.35);position:relative}
+.note .meta{font-size:15px;color:rgba(45,42,38,.6);margin-top:6px}
+.note .acts{display:flex;gap:14px;margin-top:8px;font-family:-apple-system,sans-serif;font-size:13px}
+.note .acts button{background:none;border:0;padding:2px 0;color:#4a4036;font-weight:600}
+.note .acts button.del{color:#b3261e}
+.hint{color:var(--muted);font-size:13px}
+.ok{color:var(--ok)}.err{color:var(--danger)}
+#prevWrap{display:flex;justify-content:center;margin:10px 0}
+#prev{width:min(78vw,340px);height:auto;border-radius:34px;box-shadow:0 10px 40px rgba(0,0,0,.6);background:#000}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));background:#2b3350;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+details summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>📌 Sticky Wall</h1>
+  <div class="sub" id="count">0 ghi chú</div>
+</header>
+<main>
+
+<!-- DANH SÁCH -->
+<section class="tab on" id="tab-list">
+  <input type="search" id="q" placeholder="Tìm ghi chú...">
+  <div class="chips" id="tagChips"></div>
+  <div id="list"></div>
+</section>
+
+<!-- THÊM -->
+<section class="tab" id="tab-add">
+  <div class="card">
+    <label for="newText">Nội dung ghi chú</label>
+    <textarea id="newText" placeholder="Dán một hoặc nhiều ghi chú. Mỗi ghi chú cách nhau một dòng trống, hoặc bắt đầu bằng gạch đầu dòng. Có thể ghi kèm người nói ở cuối từng ghi chú, ví dụ: ... — Tên người nói | Tên sách hoặc bài nói"></textarea>
+    <label class="row fit" style="margin:8px 0;color:var(--text)"><input type="checkbox" id="split" checked> Tách thành nhiều ghi chú</label>
+    <div class="row">
+      <div><label for="newAuthor">Người nói / tác giả (tuỳ chọn)</label><input type="text" id="newAuthor" placeholder="Tên người nói"></div>
+      <div><label for="newSource">Sách / bài nói / podcast (tuỳ chọn)</label><input type="text" id="newSource" placeholder="Tên sách hoặc video"></div>
+    </div>
+    <div class="row">
+      <div><label for="newTags">Thẻ chủ đề (cách nhau dấu phẩy)</label><input type="text" id="newTags" placeholder="đầu tư, tư duy"></div>
+    </div>
+    <p class="hint">Người nói và nguồn ở đây áp dụng cho mọi ghi chú vừa dán. Ghi chú nào có "— Tên | Nguồn" ở cuối thì dùng thông tin riêng của nó.</p>
+    <div class="row" style="margin-top:12px"><button class="btn" id="addBtn">Thêm ghi chú</button></div>
+  </div>
+  <div class="card">
+    <strong>Nhập từ file</strong>
+    <p class="hint">Hỗ trợ .txt, .md, .json (mảng chuỗi, mảng đối tượng, hoặc file notes.json của app). Thẻ và nguồn bên dưới sẽ gán cho mọi ghi chú nhập từ file .txt/.md.</p>
+    <input type="file" id="file" accept=".txt,.md,.markdown,.json,text/plain,application/json" multiple>
+  </div>
+</section>
+
+<!-- XEM TRƯỚC -->
+<section class="tab" id="tab-prev">
+  <div id="prevWrap"><canvas id="prev"></canvas></div>
+  <div class="row">
+    <button class="btn" id="reroll">🎲 Đổi ngẫu nhiên</button>
+    <button class="btn sec" id="savePng">Tải ảnh PNG</button>
+  </div>
+  <p class="hint">Ảnh thật được tạo tự động mỗi sáng trên GitHub, bố cục tương tự bản xem trước này nhưng cách chọn ghi chú theo ngày.</p>
+</section>
+
+<!-- CÀI ĐẶT -->
+<section class="tab" id="tab-set">
+  <div class="card">
+    <strong>Ảnh nền</strong>
+    <label for="theme">Giao diện nền</label>
+    <select id="theme"><option value="dark">Tối</option><option value="light">Sáng</option></select>
+    <label for="cnt">Số sticky note mỗi ngày</label>
+    <select id="cnt"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+    <label for="res">Kích thước màn hình iPhone</label>
+    <select id="res">
+      <option value="1206x2622">iPhone 15 Pro/16 Pro/17 Pro (1206×2622)</option>
+      <option value="1320x2868">Pro Max 16/17 (1320×2868)</option>
+      <option value="1290x2796">15 Plus/15 Pro Max/16 Plus (1290×2796)</option>
+      <option value="1179x2556">iPhone 14 Pro/15/16 (1179×2556)</option>
+      <option value="1170x2532">iPhone 12/13/14 (1170×2532)</option>
+    </select>
+    <label>Chỉ lấy ghi chú có thẻ (để trống = tất cả)</label>
+    <div class="chips" id="setTags"></div>
+  </div>
+
+  <div class="card">
+    <strong>Đồng bộ GitHub</strong>
+    <p class="hint">Ghi chú lưu trong file <code>notes.json</code> của repo. Dùng token giới hạn (fine-grained) chỉ cho đúng repo này, quyền <em>Contents: Read and write</em>. Token chỉ lưu trên máy bạn.</p>
+    <label for="gOwner">Tài khoản GitHub</label><input type="text" id="gOwner" autocapitalize="off">
+    <label for="gRepo">Tên repo</label><input type="text" id="gRepo" autocapitalize="off">
+    <label for="gBranch">Nhánh</label><input type="text" id="gBranch" value="main" autocapitalize="off">
+    <label for="gToken">Token</label><input type="password" id="gToken" autocomplete="off">
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="push">⬆ Đẩy lên GitHub</button>
+      <button class="btn sec" id="pull">⬇ Tải từ GitHub</button>
+    </div>
+    <p class="hint" id="syncMsg"></p>
+  </div>
+
+  <div class="card">
+    <strong>Sao lưu</strong>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sec" id="export">Xuất notes.json</button>
+      <button class="btn danger" id="wipe">Xoá tất cả</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-tab="list" class="on"><span class="ic">🗒️</span>Ghi chú</button>
+  <button data-tab="add"><span class="ic">➕</span>Thêm</button>
+  <button data-tab="prev"><span class="ic">🖼️</span>Xem trước</button>
+  <button data-tab="set"><span class="ic">⚙️</span>Cài đặt</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { PALETTE, drawWallpaper, pickNotes, mulberry32, hashString, todayVN } from './lib/wallpaper.js';
+
+const KEY = 'stickywall.v1', GKEY = 'stickywall.github';
+const $ = (s) => document.querySelector(s);
+const defaults = { version: 1, settings: { theme: 'dark', count: 3, width: 1206, height: 2622, tags: [] }, notes: [] };
+let data = load();
+let gh = JSON.parse(localStorage.getItem(GKEY) || '{}');
+let activeTag = null, rerollSeed = '', editingId = null;
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && Array.isArray(d.notes)) return { ...defaults, ...d, settings: { ...defaults.settings, ...(d.settings || {}) } };
+  } catch (e) {}
+  return structuredClone(defaults);
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function saveGh() { localStorage.setItem(GKEY, JSON.stringify(gh)); }
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+const uid = () => 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const normTag = (t) => t.trim().replace(/^#/, '').toLowerCase();
+const parseTags = (s) => [...new Set(s.split(/[,;]/).map(normTag).filter(Boolean))];
+const allTags = () => [...new Set(data.notes.flatMap((n) => n.tags || []))].sort((a, b) => a.localeCompare(b, 'vi'));
+const keyOf = (t) => t.trim().replace(/\s+/g, ' ').toLowerCase();
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+function showTab(name) {
+  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + name));
+  if (name === 'prev') drawPreview();
+  if (name === 'set') renderSettings();
+  window.scrollTo(0, 0);
+}
+
+// ---------- Danh sách ----------
+function renderList() {
+  $('#count').textContent = data.notes.length + ' ghi chú';
+  const tags = allTags();
+  $('#tagChips').innerHTML = tags.length
+    ? ['Tất cả', ...tags].map((t, i) => `<button class="chip ${(i === 0 && !activeTag) || t === activeTag ? 'on' : ''}" data-t="${i === 0 ? '' : esc(t)}">${i === 0 ? 'Tất cả' : '#' + esc(t)}</button>`).join('')
+    : '';
+  $('#tagChips').querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => { activeTag = c.dataset.t || null; renderList(); }));
+  const q = $('#q').value.trim().toLowerCase();
+  const items = data.notes.filter((n) => (!activeTag || (n.tags || []).includes(activeTag)) && (!q || (n.text + ' ' + (n.source || '') + ' ' + (n.tags || []).join(' ')).toLowerCase().includes(q)));
+  if (!items.length) {
+    $('#list').innerHTML = `<p class="hint">${data.notes.length ? 'Không có ghi chú khớp.' : 'Chưa có ghi chú. Mở tab Thêm để dán hoặc nhập từ file.'}</p>`;
+    return;
+  }
+  $('#list').innerHTML = items.slice().reverse().map((n) => {
+    const c = PALETTE[hashString(n.id) % PALETTE.length];
+    const attr = [n.author, n.source].filter(Boolean).map(esc).join(', ');
+    const meta = [attr ? '— ' + attr : '', (n.tags || []).map((t) => '#' + esc(t)).join(' ')].filter(Boolean).join('   ');
+    if (editingId === n.id) {
+      return `<div class="note" style="background:${c}" data-id="${n.id}">
+        <textarea class="e-text" style="background:#fff8;color:#222;border:0">${esc(n.text)}</textarea>
+        <input class="e-author" type="text" placeholder="Người nói / tác giả" value="${esc(n.author || '')}" style="margin-top:6px;background:#fff8;color:#222;border:0">
+        <input class="e-src" type="text" placeholder="Sách / bài nói / podcast" value="${esc(n.source || '')}" style="margin-top:6px;background:#fff8;color:#222;border:0">
+        <input class="e-tags" type="text" placeholder="Thẻ, cách nhau dấu phẩy" value="${esc((n.tags || []).join(', '))}" style="margin-top:6px;background:#fff8;color:#222;border:0">
+        <div class="acts"><button data-a="ok">Lưu</button><button data-a="cancel">Huỷ</button></div></div>`;
+    }
+    return `<div class="note" style="background:${c}" data-id="${n.id}">${esc(n.text).replace(/\n/g, '<br>')}${meta ? `<div class="meta">${meta}</div>` : ''}
+      <div class="acts"><button data-a="edit">Sửa</button><button class="del" data-a="del">Xoá</button></div></div>`;
+  }).join('');
+}
+$('#q').addEventListener('input', renderList);
+$('#list').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const el = b.closest('.note'), id = el.dataset.id, n = data.notes.find((x) => x.id === id);
+  if (b.dataset.a === 'edit') { editingId = id; renderList(); }
+  else if (b.dataset.a === 'cancel') { editingId = null; renderList(); }
+  else if (b.dataset.a === 'ok') {
+    const text = el.querySelector('.e-text').value.trim();
+    if (!text) return toast('Nội dung không được trống');
+    n.text = text; n.source = el.querySelector('.e-src').value.trim() || undefined;
+    n.author = el.querySelector('.e-author').value.trim() || undefined;
+    n.tags = parseTags(el.querySelector('.e-tags').value);
+    editingId = null; save(); renderList(); toast('Đã lưu');
+  } else if (b.dataset.a === 'del') {
+    if (confirm('Xoá ghi chú này?')) { data.notes = data.notes.filter((x) => x.id !== id); save(); renderList(); }
+  }
+});
+
+// ---------- Thêm ----------
+function splitNotes(raw, doSplit) {
+  raw = raw.replace(/\r/g, '').trim();
+  if (!raw) return [];
+  if (!doSplit) return [raw];
+  const lines = raw.split('\n');
+  const bullet = /^\s*(?:[-*•–—]|\d+[.)])\s+/;
+  const out = []; let cur = [];
+  const flush = () => { const t = cur.join(' ').replace(/\s+/g, ' ').trim(); if (t) out.push(t); cur = []; };
+  for (const ln of lines) {
+    if (!ln.trim()) { flush(); continue; }
+    if (bullet.test(ln)) { flush(); cur.push(ln.replace(bullet, '')); }
+    else cur.push(ln.trim());
+  }
+  flush();
+  return out;
+}
+// Tách phần "— Tên người nói | Nguồn" ở cuối ghi chú. Chỉ nhận khi phần sau dấu gạch
+// bắt đầu bằng chữ hoa, ngắn và không kết thúc bằng dấu câu, để không cắt nhầm câu có dấu gạch.
+function parseAttr(t) {
+  const m = t.match(/^([\s\S]*\S)\s+[—–]\s+([^—–\n]{2,100})$/);
+  if (!m || !/^\p{Lu}/u.test(m[2].trim()) || /[.!?…:;]$/.test(m[2].trim())) return { text: t.trim() };
+  const [a, b] = m[2].split('|').map((s) => s.trim());
+  return { text: m[1].trim(), author: a || undefined, source: b || undefined };
+}
+function addNotes(texts, source, tags, author) {
+  const seen = new Set(data.notes.map((n) => keyOf(n.text)));
+  let added = 0;
+  const day = todayVN();
+  for (const raw of texts) {
+    const p = parseAttr(raw);
+    const k = keyOf(p.text);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    const n = { id: uid(), text: p.text, tags: tags.slice(), createdAt: day };
+    const a = p.author || author, s = p.source || source;
+    if (a) n.author = a;
+    if (s) n.source = s;
+    data.notes.push(n); added++;
+  }
+  save(); renderList();
+  return added;
+}
+$('#addBtn').addEventListener('click', () => {
+  const texts = splitNotes($('#newText').value, $('#split').checked);
+  if (!texts.length) return toast('Hãy nhập nội dung');
+  const added = addNotes(texts, $('#newSource').value.trim(), parseTags($('#newTags').value), $('#newAuthor').value.trim());
+  $('#newText').value = '';
+  toast(added ? `Đã thêm ${added} ghi chú` : 'Ghi chú đã tồn tại');
+});
+$('#file').addEventListener('change', async (e) => {
+  let total = 0, skipped = 0;
+  const src = $('#newSource').value.trim(), auth = $('#newAuthor').value.trim(), tags = parseTags($('#newTags').value);
+  for (const f of e.target.files) {
+    const text = await f.text();
+    if (/\.json$/i.test(f.name)) {
+      try {
+        const j = JSON.parse(text);
+        const arr = Array.isArray(j) ? j : j.notes;
+        if (!Array.isArray(arr)) throw new Error('format');
+        const seen = new Set(data.notes.map((n) => keyOf(n.text)));
+        for (const it of arr) {
+          const o = typeof it === 'string' ? { text: it } : it;
+          if (!o || !o.text || seen.has(keyOf(o.text))) { skipped++; continue; }
+          seen.add(keyOf(o.text));
+          data.notes.push({ id: o.id || uid(), text: String(o.text).trim(), author: o.author || auth || undefined, source: o.source || src || undefined, tags: (o.tags || tags).map(normTag), createdAt: o.createdAt || todayVN() });
+          total++;
+        }
+        save();
+      } catch (err) { toast('File JSON không hợp lệ: ' + f.name); }
+    } else {
+      total += addNotes(splitNotes(text, true), src, tags, auth);
+    }
+  }
+  e.target.value = '';
+  renderList();
+  toast(`Đã nhập ${total} ghi chú` + (skipped ? `, bỏ qua ${skipped}` : ''));
+});
+
+// ---------- Xem trước ----------
+const FONT = '"Patrick Hand", "Segoe Print", cursive';
+async function drawPreview() {
+  try { await document.fonts.load('40px "Patrick Hand"', 'Đừng ủ ỉ ế ờ'); } catch (e) {}
+  const s = data.settings, c = $('#prev');
+  c.width = s.width; c.height = s.height;
+  const date = todayVN();
+  const seedStr = date + '|' + data.notes.length + rerollSeed;
+  const picks = pickNotes(data.notes, s.count, mulberry32(hashString(seedStr)), s.tags);
+  drawWallpaper(c.getContext('2d'), s.width, s.height, picks, { theme: s.theme, fontFamily: FONT, seedStr });
+}
+$('#reroll').addEventListener('click', () => { rerollSeed = '|' + Math.random(); drawPreview(); });
+$('#savePng').addEventListener('click', () => {
+  $('#prev').toBlob((b) => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'sticky-wallpaper.png'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+});
+
+// ---------- Cài đặt ----------
+function renderSettings() {
+  const s = data.settings;
+  $('#theme').value = s.theme; $('#cnt').value = String(s.count); $('#res').value = s.width + 'x' + s.height;
+  const tags = allTags();
+  $('#setTags').innerHTML = tags.length ? tags.map((t) => `<button class="chip ${s.tags.includes(t) ? 'on' : ''}" data-t="${esc(t)}">#${esc(t)}</button>`).join('') : '<span class="hint">Chưa có thẻ nào.</span>';
+  $('#setTags').querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => {
+    const t = c.dataset.t; s.tags = s.tags.includes(t) ? s.tags.filter((x) => x !== t) : [...s.tags, t];
+    save(); renderSettings();
+  }));
+  $('#gOwner').value = gh.owner || ''; $('#gRepo').value = gh.repo || ''; $('#gBranch').value = gh.branch || 'main'; $('#gToken').value = gh.token || '';
+}
+$('#theme').addEventListener('change', (e) => { data.settings.theme = e.target.value; save(); });
+$('#cnt').addEventListener('change', (e) => { data.settings.count = +e.target.value; save(); });
+$('#res').addEventListener('change', (e) => { const [w, h] = e.target.value.split('x').map(Number); data.settings.width = w; data.settings.height = h; save(); });
+['gOwner', 'gRepo', 'gBranch', 'gToken'].forEach((id) => $('#' + id).addEventListener('input', () => {
+  gh = { owner: $('#gOwner').value.trim(), repo: $('#gRepo').value.trim(), branch: $('#gBranch').value.trim() || 'main', token: $('#gToken').value.trim() };
+  saveGh();
+}));
+
+function exportObj() { return { version: 1, settings: data.settings, notes: data.notes }; }
+$('#export').addEventListener('click', () => {
+  const b = new Blob([JSON.stringify(exportObj(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'notes.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+$('#wipe').addEventListener('click', () => {
+  if (confirm('Xoá TẤT CẢ ghi chú trên máy này? (Bản trên GitHub không bị ảnh hưởng)')) { data.notes = []; save(); renderList(); toast('Đã xoá'); }
+});
+
+// ---------- GitHub ----------
+const b64enc = (str) => { const bytes = new TextEncoder().encode(str); let s = ''; bytes.forEach((b) => (s += String.fromCharCode(b))); return btoa(s); };
+const b64dec = (b64) => { const bin = atob(b64.replace(/\n/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))); };
+function ghReady() {
+  if (!gh.owner || !gh.repo || !gh.token) { setMsg('Điền đủ tài khoản, repo và token.', true); return false; }
+  return true;
+}
+function setMsg(t, bad) { const m = $('#syncMsg'); m.textContent = t; m.className = 'hint ' + (bad ? 'err' : 'ok'); }
+const api = (path, opt = {}) => fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${path}`, {
+  ...opt, headers: { Authorization: 'Bearer ' + gh.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+});
+async function remoteGet() {
+  const r = await api(`notes.json?ref=${encodeURIComponent(gh.branch || 'main')}&t=${Date.now()}`);
+  if (r.status === 404) return { sha: null, json: null };
+  if (!r.ok) throw new Error('GitHub trả về ' + r.status);
+  const j = await r.json();
+  return { sha: j.sha, json: JSON.parse(b64dec(j.content)) };
+}
+$('#push').addEventListener('click', async () => {
+  if (!ghReady()) return;
+  setMsg('Đang đẩy...');
+  try {
+    const { sha } = await remoteGet();
+    const body = { message: 'Cập nhật ghi chú ' + todayVN(), content: b64enc(JSON.stringify(exportObj(), null, 2) + '\n'), branch: gh.branch || 'main' };
+    if (sha) body.sha = sha;
+    const r = await api('notes.json', { method: 'PUT', body: JSON.stringify(body) });
+    if (!r.ok) throw new Error('GitHub trả về ' + r.status + (r.status === 401 || r.status === 403 ? ' (kiểm tra quyền token)' : ''));
+    setMsg('Đã đẩy lên GitHub. Ảnh nền sẽ được tạo lại sau khoảng 1 phút.');
+  } catch (e) { setMsg('Lỗi: ' + e.message, true); }
+});
+$('#pull').addEventListener('click', async () => {
+  if (!ghReady()) return;
+  setMsg('Đang tải...');
+  try {
+    const { json } = await remoteGet();
+    if (!json) return setMsg('Repo chưa có notes.json.', true);
+    if (data.notes.length && !confirm('Gộp ghi chú từ GitHub vào máy này? (Ghi chú trùng sẽ được bỏ qua, cài đặt lấy từ GitHub)')) return setMsg('Đã huỷ.');
+    const seen = new Set(data.notes.map((n) => keyOf(n.text)));
+    let add = 0;
+    for (const n of json.notes || []) if (n.text && !seen.has(keyOf(n.text))) { data.notes.push(n); seen.add(keyOf(n.text)); add++; }
+    if (json.settings) data.settings = { ...data.settings, ...json.settings };
+    save(); renderList(); renderSettings();
+    setMsg(`Đã tải, thêm ${add} ghi chú mới.`);
+  } catch (e) { setMsg('Lỗi: ' + e.message, true); }
+});
+
+renderList();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
