@@ -35,24 +35,114 @@
       "createdAt": "2026-10-31"
     },
     {
-      "id": "n5",
-      "text": "Lãi kép không chỉ áp dụng cho tiền. Kiến thức, thói quen và các mối quan hệ cũng cộng dồn theo thời gian.",
+      "id": "thunhap-01",
+      "text": "Tiền đến từ số đông. Đừng lao vào làm như con thiêu thân: hãy giải quyết bài toán của nhiều người và bán thứ thị trường cần, không phải thứ mình có.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
       "tags": [
-        "tư duy",
-        "đầu tư"
+        "thu nhập",
+        "thị trường"
       ],
-      "createdAt": "2026-10-31"
+      "createdAt": "2026-11-10"
     },
     {
-      "id": "nmwa4eobbpy2h",
-      "text": "Muốn kiếm được nhiều tiền hãy tạo giá trị cho nhiều người",
+      "id": "thunhap-02",
+      "text": "Một người chỉ có 8–12 giờ mỗi ngày. Muốn thu nhập lớn phải nhân bản giờ công bằng nhân sự, đối tác, công nghệ và AI. 100 nhân sự là 1.000 giờ công mỗi ngày.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
       "tags": [
-        "đầu tư",
+        "thu nhập",
+        "đòn bẩy"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-03",
+      "text": "Xoáy sâu vào một chuyên môn cốt lõi. Đừng mang nhiều con dao mà không con nào thực sự sắc bén.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "chuyên môn",
         "tư duy"
       ],
-      "createdAt": "2026-11-10",
-      "author": "Dan Nguyễn",
-      "source": "Poscast"
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-04",
+      "text": "Sản phẩm hóa năng lực của mình thành sách, ebook, khóa học. Ba tiêu chí: giải quyết bài toán số đông, đơn giản dễ dùng, giá hợp lý.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "thu nhập",
+        "sản phẩm"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-05",
+      "text": "Dùng đòn bẩy để đi nhanh: con người và quy trình, vốn (chỉ dùng tối đa 30–50% thu nhập để trả gốc và lãi), công nghệ và truyền thông.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "đòn bẩy",
+        "đầu tư"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-06",
+      "text": "Uy tín là tài sản 5–10 năm, xây bằng việc nói được làm được. Đã hứa thưởng đúng hạn thì phải thưởng, bất kể bao nhiêu tiền.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "uy tín",
+        "kinh doanh"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-07",
+      "text": "Kiếm tiền mới là 20% chặng đường. Sự thịnh vượng đến từ việc giữ tiền và biến dòng tiền thành tài sản bền vững như bất động sản, vàng, cổ phiếu bluechip.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "đầu tư",
+        "tài sản"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-08",
+      "text": "Đức xứng với vị: nội lực, tri thức, sức khỏe và sự lương thiện đủ dày thì tài sản và vị trí mới giữ được lâu.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "tư duy",
+        "đức hạnh"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-09",
+      "text": "Kiến thức hay đến mấy mà không thực thi thì mọi thứ vẫn y nguyên. Bắt đầu từ việc nhỏ: viết ra 3 gạch đầu dòng về chuyên môn của mình.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "hành động",
+        "tư duy"
+      ],
+      "createdAt": "2026-11-10"
+    },
+    {
+      "id": "thunhap-10",
+      "text": "Sự thịnh vượng gắn với trách nhiệm đóng góp cho cộng đồng: chia sẻ kiến thức và giúp người đang bế tắc.",
+      "author": "DanFoolish",
+      "source": "YTBposcast",
+      "tags": [
+        "tư duy",
+        "cộng đồng"
+      ],
+      "createdAt": "2026-11-10"
     }
   ]
 }
