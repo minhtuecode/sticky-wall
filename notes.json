@@ -1,11 +1,58 @@
 {
   "version": 1,
-  "settings": { "theme": "dark", "count": 3, "width": 1206, "height": 2622, "tags": [] },
+  "settings": {
+    "theme": "light",
+    "count": 3,
+    "width": 1320,
+    "height": 2868,
+    "tags": []
+  },
   "notes": [
-    { "id": "n1", "text": "Đừng so sánh chương 1 của mình với chương 20 của người khác.", "author": "Tên người nói (mẫu)", "source": "Tên sách hoặc bài nói (mẫu)", "tags": ["tư duy"], "createdAt": "2026-10-31" },
-    { "id": "n2", "text": "Rủi ro đến từ việc bạn không biết mình đang làm gì. Hãy xác định mức thua lỗ tối đa trước khi vào lệnh, không phải sau.", "source": "Sách đầu tư", "tags": ["đầu tư"], "createdAt": "2026-10-31" },
-    { "id": "n3", "text": "Mỗi ngày học 20 phút còn hơn dồn 3 tiếng vào cuối tuần.", "tags": ["học tập"], "createdAt": "2026-10-31" },
-    { "id": "n4", "text": "Ngủ đủ giấc là khoản đầu tư có lãi suất cao nhất cho năng suất.", "source": "YouTube", "tags": ["sức khỏe"], "createdAt": "2026-10-31" },
-    { "id": "n5", "text": "Lãi kép không chỉ áp dụng cho tiền. Kiến thức, thói quen và các mối quan hệ cũng cộng dồn theo thời gian.", "tags": ["tư duy", "đầu tư"], "createdAt": "2026-10-31" }
+    {
+      "id": "n2",
+      "text": "Rủi ro đến từ việc bạn không biết mình đang làm gì. Hãy xác định mức thua lỗ tối đa trước khi vào lệnh, không phải sau.",
+      "source": "Sách đầu tư",
+      "tags": [
+        "đầu tư"
+      ],
+      "createdAt": "2026-10-31"
+    },
+    {
+      "id": "n3",
+      "text": "Mỗi ngày học 20 phút còn hơn dồn 3 tiếng vào cuối tuần.",
+      "tags": [
+        "học tập"
+      ],
+      "createdAt": "2026-10-31"
+    },
+    {
+      "id": "n4",
+      "text": "Ngủ đủ giấc là khoản đầu tư có lãi suất cao nhất cho năng suất.",
+      "source": "YouTube",
+      "tags": [
+        "sức khỏe"
+      ],
+      "createdAt": "2026-10-31"
+    },
+    {
+      "id": "n5",
+      "text": "Lãi kép không chỉ áp dụng cho tiền. Kiến thức, thói quen và các mối quan hệ cũng cộng dồn theo thời gian.",
+      "tags": [
+        "tư duy",
+        "đầu tư"
+      ],
+      "createdAt": "2026-10-31"
+    },
+    {
+      "id": "nmwa4eobbpy2h",
+      "text": "Muốn kiếm được nhiều tiền hãy tạo giá trị cho nhiều người",
+      "tags": [
+        "đầu tư",
+        "tư duy"
+      ],
+      "createdAt": "2026-11-10",
+      "author": "Dan Nguyễn",
+      "source": "Poscast"
+    }
   ]
 }
