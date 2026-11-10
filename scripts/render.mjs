@@ -18,7 +18,7 @@ const data = existsSync(notesPath) ? JSON.parse(readFileSync(notesPath, 'utf8'))
 const s = { theme: 'dark', count: 3, width: 1206, height: 2622, tags: [], ...(data.settings || {}) };
 
 const date = process.env.WALLPAPER_DATE || todayVN();
-const seedStr = date + '|' + (data.notes || []).length;
+const seedStr = date + '|' + (data.notes || []).length + (s.salt ? '|' + s.salt : '');
 const rng = mulberry32(hashString(seedStr));
 const picks = pickNotes(data.notes || [], s.count, rng, s.tags);
 
